@@ -16,10 +16,14 @@ function [y,t] = sampling(y_os,t_os,n_os,filterspan_pulse,filterspan_mf)
     % first delay with the conv by the pulse 
     % the second delay with the matched filter
 
-    % Each convolution introduces a delay equal to half of its filter span.
-    % the delay is the sum of the half of the filter spans because we have
-    % the maximum energy in the middle of each signal, since this is where
-    % we have the max correspondence with the filter.
+    % Each convolution introduces a delay, which is sum of the half of the filter spans.
+    % The signal is slided with each convolution a little bit, because
+    % it needs time for its whole shape to fully overlap and collect all the
+    % energy. 
+    % The maximum energy is in the middle of each signal, since this is where we have the max correspondence with the filter.
+    % After the delay, the the signal enery is maximum, so we start the
+    % sampling from there.
+   
 
     % e.g. delay = 4 means that the maximum energy will be reached at the
     % 4th sample after the start.
@@ -28,8 +32,26 @@ function [y,t] = sampling(y_os,t_os,n_os,filterspan_pulse,filterspan_mf)
 
                                                               
     % this delay must be substracted before the symbol sampling so that
-    % each symbol is sampled at its energy peak. 
-     sample_indices = delay: n_os : length(y_os); % we find the sampling indices to find the corresponding symbol
+    % each symbol is sampled at its energy peak.
+
+    % Normally, when we perform oversampling e.g. if our symbols are 1 and
+    % -1, the oversampled signal becomes 1 1 1 1 -1 -1 -1 -1.
+
+    % Hovewer, in this oversampled signal we don't know which samples
+    % correspons to the center of each symbol yet (meaning which samples represent the true symbols)
+    % After pulse shaping and matched filtering, the signal's energy
+    % reaches its maximum at a specific point in time.
+    % By compensating for the delay, we locate this point of maximum
+    % energy, so the correct instant where we should perform sampling.
+
+    % Since each symbol follows the previous ont with a period T, once we
+    % find the first peak of energy (after the delay), the peaks of the
+    % following symbols will appear every n_os samples apart.
+
+    % Therefore, after finding the correct first sampling point, taking one
+    % sample every n_os samples ensures that we always sample each symbol
+    % exactly at its maximum energy position.
+     sample_indices = delay : n_os : length(y_os); % we find the sampling indices to find the corresponding symbol
 
      y = y_os(sample_indices);
 
