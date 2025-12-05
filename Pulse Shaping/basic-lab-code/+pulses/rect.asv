@@ -5,13 +5,7 @@ function pulse = rect(n_os)
 
 
 pulse = ones(1,n_os);
-% pulse = zeros(1,n_os);
-% T = 1; % pulse should have the height 1
-% t = (0 : 1/n_os : T);
-% 
-% for k = 1: n_os
-%     pulse(k) = t(k);
-% end 
+
 
 end
 

@@ -1,7 +1,7 @@
-% Group: Sude Topgül & Antonia Juncu 
+% Group: Sude Topgü
 
 function [mf_pulse] = get_mf(g_pulse)
-%GET_MF creates the impuls response mf_pulse of the matched filter
+%GET_MF 
 
 
 mf_pulse = zeros(size(g_pulse));

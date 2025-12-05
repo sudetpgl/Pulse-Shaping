@@ -1,16 +1,14 @@
-% Group: Sude Topgül & Antonia Juncu 
-
 function [y,t] = sampling(y_os,t_os,n_os,filterspan_pulse,filterspan_mf)
 % SAMPLING Summary of this function goes here
 %   Detailed explanation goes here
 
-% if filterspan_pulse == 1
-%     y = zeros(1,(length(y_os)+1)/n_os - 1);
-%     t = zeros(size(y));
-% else
-%     y = zeros(1,(length(y_os)+1)/n_os);
-%     t = zeros(size(y));
-%  end
+if filterspan_pulse == 1
+    y = zeros(1,(length(y_os)+1)/os - 1);
+    t = zeros(size(y));
+else
+    y = zeros(1,(length(y_os)+1)/os);
+    t = zeros(size(y));
+
     
     %% the delay of the signal due to two convoluation:
     % first delay with the conv by the pulse 
@@ -29,10 +27,13 @@ function [y,t] = sampling(y_os,t_os,n_os,filterspan_pulse,filterspan_mf)
                                                               
     % this delay must be substracted before the symbol sampling so that
     % each symbol is sampled at its energy peak. 
-     sample_indices = delay: n_os : length(y_os); % we find the sampling indices to find the corresponding symbol
+     sample_indices = delay + 1 : n_os : length(y_os); % we find the sampling indices to find the corresponding symbol
 
      y = y_os(sample_indices);
 
      t = t_os(sample_indices);
+end
+
+
 
 end
