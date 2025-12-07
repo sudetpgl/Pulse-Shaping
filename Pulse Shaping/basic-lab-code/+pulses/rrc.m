@@ -12,57 +12,41 @@ function pulse = rrc(filterspan, rolloff, n_os, design_type)
 assert(mod(filterspan,2)==0,'filterspan must be an even number');
 pulse = zeros(1,n_os*filterspan);
 N = n_os * filterspan; 
-
-% centered time axis
-t = ((0:N-1) - N/2) / n_os;   % in symbol periods
+t = ((0:N-1) - N/2) / n_os; 
 
 switch lower(design_type)
     case 'time'
-        tol = 1e-12;
-        if rolloff == 0
-            pulse = sinc(t);
-        else
-            % closed-form eq. (4.8)
-            % general numerator/denominator
-            numer = sin(pi .* (t) .* (1 - rolloff)) + (4*rolloff .* (t)) .* cos(pi .* (t) .* (1 + rolloff));
-            denom = pi .* (t) .* (1 - (4*rolloff .* (t)).^2);
-            % regular points
-            idx_reg = (abs(t) > tol) & (abs(abs(4*rolloff.*t) - 1) > 1e-8);
-            pulse(idx_reg) = ( numer(idx_reg) ./ denom(idx_reg) );
-            % t == 0
-            idx0 = abs(t) <= tol;
-            if any(idx0)
-                pulse(idx0) = (1 - rolloff + (4*rolloff/pi));
-            end
-            % t == +/- T/(4*rolloff)
-            if rolloff ~= 0
-                t_sp = 1 / (4*rolloff);
-                idx_sp = abs(abs(t) - t_sp) < 1e-8;
-                if any(idx_sp)
-                    pulse(idx_sp) = (rolloff / sqrt(2)) * ( (1 + 2/pi) * sin(pi/(4*rolloff)) + (1 - 2/pi) * cos(pi/(4*rolloff)) );
-                end
-            end
+        pulse(1) = 1;
+        numer = sin(pi .* (t) .* (1 - rolloff)) + (4*rolloff .* (t)) .* cos(pi .* (t) .* (1 + rolloff));
+        denom = pi .* (t) .* (1 - (4*rolloff .* (t)).^2);
+        idx_reg = (abs(abs(4*rolloff.*t) - 1) > 1e-8);
+        pulse(idx_reg) = (numer(idx_reg) ./ denom(idx_reg) );
+        idx0 = t == 0;
+        if any(idx0)
+           pulse(idx0) = (1 - rolloff + (4*rolloff/pi));
         end
-
+        idx_sp = abs(abs(t) - 1/(4*rolloff)) < 0;
+        if any(idx_sp)
+            pulse(idx_sp) = (rolloff / sqrt(2)) * ( (1 + 2/pi) * sin(pi/(4*rolloff)) + (1 - 2/pi) * cos(pi/(4*rolloff)) );
+        end
+  
     case 'freq'
         % build RC spectrum then take sqrt
-        df = 1 / N;
-        f = ((-N/2):(N/2-1)) * df;
-        f0 = (1 - rolloff) / 2;
-        f1 = (1 + rolloff) / 2;
-        Gu = zeros(1,N);
-        a = abs(f);
-        idx1 = a <= f0;
-        Gu(idx1) = 1;
-        idx2 = (a > f0) & (a <= f1);
+        du = 1 / filterspan;
+        u = ((-N/2):(N/2-1)) * du;  
+        u0 = (1 - rolloff) / 2;
+        u1 = (1 + rolloff) / 2;
+        a = abs(u);
+        idx1 = a <= u0;
+        pulse(idx1) = 1;
+        idx2 = (a > u0) & (a <= u1);
         if rolloff > 0
-            Gu(idx2) = 0.5 * (1 + cos(pi * (a(idx2) - f0) / (f1 - f0)));
+            pulse(idx2) = 0.5 * (1 + cos(pi/rolloff * (a(idx2) - u0)));
         end
-        Grrc = sqrt(Gu);
-        g = real(ifft(ifftshift(Grrc)));
-        pulse = fftshift(g).';
-        pulse = pulse(:).';
-      %  pulse = fftshift(abs(fft(pulse)));
+        pulse_root = sqrt(pulse);
+        pulse_out = real(ifft(ifftshift(pulse_root)));
+        pulse_out = fftshift(pulse_out).';
+        pulse = pulse_out(:).';
     end
 
 end
