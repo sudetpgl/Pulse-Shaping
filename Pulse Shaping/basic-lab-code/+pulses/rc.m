@@ -18,7 +18,6 @@ t = ((0:N-1) - N/2) / n_os;   % in symbol periods, centered
 
 switch lower(design_type)
     case 'time'
-        pulse(1) = 1;
         arg = 2*rolloff .* t;
         denom = 1 - arg.^2;
         pulse = (sinc(t) .* cos(pi*rolloff.*t)) ./ denom;
@@ -26,11 +25,11 @@ switch lower(design_type)
             pulse(find(t)) = pi/4*sinc(1/(2*rolloff));
         end
     case 'freq'
-        du = 1 / filterspan;
+        du = 1 / N;
         u = ((-N/2):(N/2-1)) * du;  
         u0 = (1 - rolloff) / 2;
         u1 = (1 + rolloff) / 2;
-        a = abs(u);
+        a = abs(u)*n_os;
         idx1 = a <= u0;
         pulse(idx1) = 1;
         idx2 = (a > u0) & (a <= u1);
@@ -43,7 +42,7 @@ switch lower(design_type)
         pulses_out = fftshift(pulses_out).';
         pulse = pulses_out(:).';
     end
-
+pulse = pulse / sqrt(sum(abs(pulse).^2));
 end
 
 % p1 = pulses.rc(200, 0.75, 8, 'freq');

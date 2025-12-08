@@ -20,7 +20,6 @@ switch lower(snr_type)
         sigma2 = N0 * mf_energy;
 
     case 'snr'
-        % snr_dB is SNR at sampling point: SNR = Es / sigma2
         SNR_lin = 10^(snr_dB/10);
         sigma2 = Es / SNR_lin;
 end
